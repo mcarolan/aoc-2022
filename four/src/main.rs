@@ -9,7 +9,10 @@ struct Assignment {
 
 impl Assignment {
     fn consumes(&self, other: &Assignment) -> bool {
-        self.lower <= other.lower && self.upper >= other.upper
+        self.lower <= other.lower && other.lower <= self.upper
+            || self.lower <= other.upper && other.upper <= self.upper
+            || other.lower <= self.lower && self.lower <= other.upper
+            || other.lower <= self.upper && self.upper <= other.upper
     }
 }
 
@@ -73,7 +76,7 @@ mod tests {
         );
         assert_eq!(
             Assignment { lower: 2, upper: 8 }.consumes(&Assignment { lower: 3, upper: 9 }),
-            false
+            true
         );
     }
 
