@@ -66,9 +66,15 @@ fn main() {
     let instructions = strings.into_iter().flat_map(parse_move);
 
     for instruction in instructions {
+        let mut intermediate: Vec<char> = Vec::new();
         for _i in 0..instruction.quantity {
             let value = stacks.get_mut(&instruction.source).unwrap().pop().unwrap();
-            stacks.get_mut(&instruction.destination).unwrap().push(value);
+            intermediate.push(value);
+        }
+
+        let destination = stacks.get_mut(&instruction.destination).unwrap();
+        for _i in 0..instruction.quantity {
+            destination.push(intermediate.pop().unwrap());
         }
     }
     
