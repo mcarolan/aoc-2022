@@ -22,11 +22,11 @@ fn first_marker_offset(s: String) -> usize {
     let mut last_seen: Vec<char> = Vec::new();
 
     let result = s.char_indices().find(|(_i, c)| {
-        if last_seen.len() == 4 {
+        if last_seen.len() == 14 {
             last_seen.remove(0);
         }
         last_seen.push(*c);
-        number_unqiue(&last_seen) == 4
+        number_unqiue(&last_seen) == 14
     });
 
     result.unwrap().0 + 1
@@ -38,9 +38,10 @@ mod tests {
 
     #[test]
     fn test_first_marker_offset() {
-        assert_eq!(first_marker_offset("bvwbjplbgvbhsrlpgdmjqwftvncz".to_string()), 5);
-        assert_eq!(first_marker_offset("nppdvjthqldpwncqszvftbrmjlhg".to_string()), 6);
-        assert_eq!(first_marker_offset("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".to_string()), 10);
-        assert_eq!(first_marker_offset("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".to_string()), 11);
+        assert_eq!(first_marker_offset("mjqjpqmgbljsphdztnvjfqwrcgsmlb".to_string()), 19);
+        assert_eq!(first_marker_offset("bvwbjplbgvbhsrlpgdmjqwftvncz".to_string()), 23);
+        assert_eq!(first_marker_offset("nppdvjthqldpwncqszvftbrmjlhg".to_string()), 23);
+        assert_eq!(first_marker_offset("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg".to_string()), 29);
+        assert_eq!(first_marker_offset("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw".to_string()), 26);
     }
 }
