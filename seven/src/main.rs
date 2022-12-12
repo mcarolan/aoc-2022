@@ -178,13 +178,17 @@ fn main() {
         directory_sizes.insert(path.clone(), total);
     }
 
-    directory_sizes.iter().for_each(|kv| println!("{:?}", kv));
+    let used = directory_sizes.get(&vec!["/".to_string()]).unwrap();
 
-    let answer: usize = 
-        directory_sizes.iter().map(|(_path, size)| size).filter(|size| **size <= 100000).sum();
+    let mut sorted = Vec::from_iter(directory_sizes.iter().map(|(_name, size)| size));
+    sorted.sort_unstable();
 
-    println!("the answer is {}", answer); 
+    println!("{:?}", sorted);
 
+    let answer = 
+    sorted.iter().find(|size| (70000000 - used + ***size) >= 30000000).unwrap();
+
+    println!("the answer is {}", answer);
 }
 
 #[cfg(test)]
