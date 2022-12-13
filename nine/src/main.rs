@@ -117,16 +117,35 @@ fn parse_line(line: String) -> Option<Motion> {
 
 fn count_tail_positions(motions: Vec<Motion>) -> i32 {
     let mut tail_positions: Vec<Position> = Vec::new();
+
     let mut head = Position { x: 0, y: 0 };
-    let mut tail = Position { x: 0, y: 0};
+    let mut tail1 = Position { x: 0, y: 0};
+    let mut tail2 = Position { x: 0, y: 0};
+    let mut tail3 = Position { x: 0, y: 0};
+    let mut tail4 = Position { x: 0, y: 0};
+    let mut tail5 = Position { x: 0, y: 0};
+    let mut tail6 = Position { x: 0, y: 0};
+    let mut tail7 = Position { x: 0, y: 0};
+    let mut tail8 = Position { x: 0, y: 0};
+    let mut tail9 = Position { x: 0, y: 0};
     
-    tail_positions.push(tail.clone());
+    tail_positions.push(tail9.clone());
 
     for motion in motions {
         for _i in 0..motion.amount {
             head = next_head_position(&head, &motion.direction).clone();
-            tail = next_tail_position(&head, &tail).clone();
-            tail_positions.push(tail.clone());
+            tail1 = next_tail_position(&head, &tail1).clone();
+            tail2 = next_tail_position(&tail1, &tail2).clone();
+            tail3 = next_tail_position(&tail2, &tail3).clone();
+
+            tail4 = next_tail_position(&tail3, &tail4).clone();
+            tail5 = next_tail_position(&tail4, &tail5).clone();
+            tail6 = next_tail_position(&tail5, &tail6).clone();
+            tail7 = next_tail_position(&tail6, &tail7).clone();
+            tail8 = next_tail_position(&tail7, &tail8).clone();
+            tail9 = next_tail_position(&tail8, &tail9).clone();
+
+            tail_positions.push(tail9.clone());
         }
     }
 
@@ -253,16 +272,16 @@ mod tests {
     #[test]
     fn test_count_tail_positions() {
         let motions = vec![
-            Motion { direction: MotionDirection::Right, amount: 4},
-            Motion { direction: MotionDirection::Up, amount: 4},
-            Motion { direction: MotionDirection::Left, amount: 3},
-            Motion { direction: MotionDirection::Down, amount: 1},
-            Motion { direction: MotionDirection::Right, amount: 4},
-            Motion { direction: MotionDirection::Down, amount: 1},
-            Motion { direction: MotionDirection::Left, amount: 5},
-            Motion { direction: MotionDirection::Right, amount: 2},
+            Motion { direction: MotionDirection::Right, amount: 5},
+            Motion { direction: MotionDirection::Up, amount: 8},
+            Motion { direction: MotionDirection::Left, amount: 8},
+            Motion { direction: MotionDirection::Down, amount: 3},
+            Motion { direction: MotionDirection::Right, amount: 17},
+            Motion { direction: MotionDirection::Down, amount: 10},
+            Motion { direction: MotionDirection::Left, amount: 25},
+            Motion { direction: MotionDirection::Up, amount: 20},
         ];
 
-        assert_eq!(count_tail_positions(motions), 13);
+        assert_eq!(count_tail_positions(motions), 36);
     }
 }
