@@ -1,5 +1,5 @@
+use std::collections::HashSet;
 use std::io::BufRead;
-use std::str::SplitAsciiWhitespace;
 use std::{fs::File, io};
 enum Instruction {
     NoOp,
@@ -24,38 +24,45 @@ fn parse_instruction(line: String) -> Option<Instruction> {
     }
 }
 
-fn run(instructions: Vec<Instruction>) -> i32 {
+fn run(instructions: Vec<Instruction>) {
     let mut cycle = 0;
     let mut x = 1;
 
-    let mut interesting_signal_strengths: Vec<i32> = Vec::new();
-
-    fn check_signal_strength(current_cycle: i32, current_x: i32, buffer: &'_ mut Vec<i32>) {
-        if current_cycle == 20 || (current_cycle + 20) % 40 == 0 {
-            println!("cycle {} x {} - strength {}", current_cycle, current_x, current_cycle * current_x);
-            buffer.push(current_cycle * current_x);
+    fn check_signal_strength(current_cycle: i32, current_x: i32) {
+        if current_cycle % 40 == 0 {
+            println!("");
         }
-    };
+
+        let current_pixel = current_cycle % 40;
+
+        let set = HashSet::from([current_x - 1, current_x, current_x + 1]);
+
+        if set.contains(&current_pixel) {
+    print!("#")
+        }
+        else {
+            print!(".")
+        }
+    }
 
     for instruction in instructions {
         match instruction {
             Instruction::AddX(x_delta) => {
+                check_signal_strength(cycle, x);
                 cycle += 1;
-                check_signal_strength(cycle, x, &mut interesting_signal_strengths);
+                check_signal_strength(cycle, x);
                 cycle += 1;
-                check_signal_strength(cycle, x, &mut interesting_signal_strengths);
                 x += x_delta;
             }
             Instruction::NoOp => {
+                check_signal_strength(cycle, x);
                 cycle += 1;
-                check_signal_strength(cycle, x, &mut interesting_signal_strengths);
             }
         }
     }
     cycle += 1;
-    check_signal_strength(cycle, x, &mut interesting_signal_strengths);
+    check_signal_strength(cycle, x);
 
-    interesting_signal_strengths.iter().sum()
 }
 
 fn main() {
@@ -65,7 +72,5 @@ fn main() {
     let strings = lines.flat_map(|l| l.ok());
     let instructions = strings.flat_map(parse_instruction);
 
-    let answer = run(Vec::from_iter(instructions));
-
-    println!("The answer is {}", answer);
+    run(Vec::from_iter(instructions));
 }
