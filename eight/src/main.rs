@@ -10,7 +10,7 @@ fn value_at(x: i32, y: i32, vec: &Vec<u32>) -> u32 {
     *vec.get((y as usize * per_row) + x as usize).unwrap()
 }
 
-fn visible(x: i32, y: i32, dx: i32, dy: i32, vec: &Vec<u32>) -> bool {
+fn number_visible(x: i32, y: i32, dx: i32, dy: i32, vec: &Vec<u32>) -> i32 {
     let per_row = f64::sqrt(vec.len() as f64) as i32;
 
     let value = value_at(x, y, vec);
@@ -18,17 +18,18 @@ fn visible(x: i32, y: i32, dx: i32, dy: i32, vec: &Vec<u32>) -> bool {
     let mut current_x = x + dx;
     let mut current_y = y + dy;
 
-    let mut result = true;
+    let mut counter = 0;
 
     while current_x >= 0 && current_x < per_row && current_y  >= 0 && current_y < per_row {
+        counter += 1;
         if value_at(current_x, current_y, vec) >= value {
-            result = false;
+            break;
         }
         current_x += dx;
         current_y += dy;
     }
     
-    result
+    counter
 }
 
 fn main() {
@@ -41,20 +42,19 @@ fn main() {
 
     let per_row = f64::sqrt(tree_heights.len() as f64) as i32;
 
-    let mut counter: i32 = 0;
+    let mut max_score: i32 = -1;
 
     for x in 1..per_row - 1 {
         for y in 1..per_row - 1 {
-            let left = visible(x, y, -1, 0, &tree_heights);
-            let right = visible(x, y, 1, 0, &tree_heights);
-            let top = visible(x, y, 0, -1, &tree_heights);
-            let bottom = visible(x, y, 0, 1, &tree_heights);
+            let left = number_visible(x, y, -1, 0, &tree_heights);
+            let right = number_visible(x, y, 1, 0, &tree_heights);
+            let top = number_visible(x, y, 0, -1, &tree_heights);
+            let bottom = number_visible(x, y, 0, 1, &tree_heights);
+            let score = left * right * top * bottom;
 
-            counter += if left || right || top || bottom { 1 } else { 0 };
+            max_score = max_score.max(score);
         }
     }
 
-    counter += (per_row * 4) - 4;
-
-    println!("The answer is {}", counter);
+    println!("The answer is {}", max_score);
 }
