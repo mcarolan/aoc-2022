@@ -127,8 +127,8 @@ fn run_round(
     specs: &HashMap<u64, &MonkeySpec>,
     all_items: &mut HashMap<u64, Vec<u64>>,
     inspected: &mut HashMap<u64, u64>,
+    supermodulo: u64
 ) {
-    let mut print = true;
     for monkey_index in 0..monkey_count {
         let spec = specs.get(&(monkey_index as u64)).unwrap();
         let items = all_items.get(&(monkey_index as u64)).unwrap().clone();
@@ -137,36 +137,26 @@ fn run_round(
         inspected.insert(monkey_index as u64, old_inspected + (items.len() as u64));
 
         for old_worry in items {
-            if print { println!("old worry is {}", old_worry) };
-            let operand_a = resolve_operand(spec.operand_a, old_worry);
-            let operand_b = resolve_operand(spec.operand_b, old_worry);
+            let operand_a = resolve_operand(spec.operand_a, old_worry % supermodulo);
+            let operand_b = resolve_operand(spec.operand_b, old_worry % supermodulo);
 
             let new_worry = match spec.operator {
                 Operator::Multiply => operand_a * operand_b,
                 Operator::Plus => operand_a + operand_b,
             };
 
-            if print { println!("new worry is {}", new_worry) };
-            let less_worried = (new_worry as f64 / 3.0).floor() as u64;
+            let test_result = new_worry % spec.divisible_by == 0;
 
-            if print { println!("less worried is {}", less_worried) };
-            let test_result = less_worried % spec.divisible_by == 0;
-
-
-            if print { println!("test is {}", test_result) };
             let target_index = if test_result {
                 spec.true_monkey
             } else {
                 spec.false_monkey
             };
 
-            if print { println!("throwing to {}", target_index) };
-
             let mut target_current_items = all_items.get(&target_index).unwrap().clone();
-            target_current_items.push(less_worried);
+            target_current_items.push(new_worry);
 
             all_items.insert(target_index, target_current_items);
-            print = false;
         }
 
         all_items.insert(monkey_index as u64, Vec::new());
@@ -183,6 +173,9 @@ fn main() {
             .into_iter(),
     );
 
+    let supermodulo =
+        monkey_specs.iter().fold(1 as u64, |acc, spec| acc * spec.divisible_by);
+
     let mut monkey_inspected_map: HashMap<u64, u64> =
         HashMap::from_iter(monkey_specs.iter().map(|spec| (spec.number, 0)).into_iter());
 
@@ -195,12 +188,13 @@ fn main() {
 
     let monkey_count = monkey_specs.len();
 
-    for _i in 0..20 {
+    for _i in 0..10000 {
         run_round(
             monkey_count,
             &monkey_spec_map,
             &mut monkey_items_map,
             &mut monkey_inspected_map,
+            supermodulo
         );
     }
 
