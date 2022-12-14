@@ -1,5 +1,5 @@
-use std::{collections::HashMap, fs};
 use pathfinding::prelude::bfs;
+use std::{collections::HashMap, fs};
 
 #[derive(Debug)]
 enum NodeValue {
@@ -9,11 +9,11 @@ enum NodeValue {
 }
 
 pub fn elevation(c: char) -> u32 {
-    let elev: HashMap<char, u32> = 
-        ('a'..='z').collect::<Vec<char>>()
+    let elev: HashMap<char, u32> = ('a'..='z')
+        .collect::<Vec<char>>()
         .into_iter()
-        .zip((1..=26).collect::<Vec<u32>>()
-        .into_iter()).collect();
+        .zip((1..=26).collect::<Vec<u32>>().into_iter())
+        .collect();
     elev[&c]
 }
 
@@ -68,7 +68,6 @@ fn main() {
     let parsed = Vec::from_iter(lines.iter().flat_map(|line| line.chars().flat_map(parse)));
 
     let mut heights: HashMap<(usize, usize), u32> = HashMap::new();
-    let mut start_opt: Option<(usize, usize)> = None;
     let mut end_opt: Option<(usize, usize)> = None;
 
     for x in 0..width {
@@ -76,7 +75,6 @@ fn main() {
             let value = parsed.get(index_for(x, y, width)).unwrap();
             match value {
                 NodeValue::Start => {
-                    start_opt = Some((x, y));
                     heights.insert((x, y), elevation('a'));
                 }
                 NodeValue::End => {
@@ -90,10 +88,22 @@ fn main() {
         }
     }
 
-    let start = start_opt.unwrap();
     let end = end_opt.unwrap();
 
-    let path = 
-        bfs(&start, |(x, y)| neighbours(*x, *y, width, height, &heights), |(x, y)| *x == end.0 && *y == end.1);
-    println!("the answer is {}", path.unwrap().len() - 1);
+    let starting_points =
+        heights
+            .iter()
+            .filter_map(|(position, height)| if *height == 1 { Some(position) } else { None });
+
+    let paths = starting_points.flat_map(|(start_x, start_y)| {
+        bfs(
+            &(*start_x, *start_y),
+            |(x, y)| neighbours(*x, *y, width, height, &heights),
+            |(x, y)| *x == end.0 && *y == end.1,
+        )
+    });
+
+    let steps = paths.map(|path| path.len() - 1);
+
+    println!("The answer is {}", steps.min().unwrap())
 }
