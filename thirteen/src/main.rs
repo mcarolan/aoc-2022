@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     character::complete::{self, newline, space0},
     combinator::map,
-    multi::separated_list0,
+    multi::{separated_list0, many0, many1},
     sequence::{preceded, terminated, tuple},
     IResult,
 };
@@ -16,7 +16,17 @@ enum Element {
 }
 
 fn parse_pairs(input: &str) -> IResult<&str, Vec<(Vec<Element>, Vec<Element>)>> {
-    separated_list0(complete::char('\n'), tuple((terminated(parse_element, newline), terminated(parse_element, newline))))(input)
+    separated_list0(
+        complete::char('\n'),
+        tuple((
+            terminated(parse_element, newline),
+            terminated(parse_element, newline),
+        )),
+    )(input)
+}
+
+fn parse_packets(input: &str) -> IResult<&str, Vec<Vec<Element>>> {
+    many0(terminated(parse_element, many1(newline)))(input)
 }
 
 fn parse_element(input: &str) -> IResult<&str, Vec<Element>> {
@@ -36,7 +46,7 @@ fn parse_element(input: &str) -> IResult<&str, Vec<Element>> {
 enum Decision {
     True,
     False,
-    None
+    None,
 }
 
 fn in_order(pair1: &[Element], pair2: &[Element]) -> Decision {
@@ -62,10 +72,10 @@ fn in_order(pair1: &[Element], pair2: &[Element]) -> Decision {
                 "in order lists {:?} and {:?}, comparing next elements",
                 xs, ys
             );
-            
+
             match list_decision {
                 Decision::None => in_order(tail1, tail2),
-                other => other
+                other => other,
             }
         }
         (Some((Element::List(xs), _tail1)), Some((Element::Number(n), tail2))) => {
@@ -86,9 +96,7 @@ fn in_order(pair1: &[Element], pair2: &[Element]) -> Decision {
 
             in_order(promoted.as_slice(), pair2)
         }
-        (None, None) => {
-            Decision::None
-        },
+        (None, None) => Decision::None,
         (None, _) => {
             println!("Left side ran out of items, inputs are in order");
             Decision::True
@@ -111,13 +119,55 @@ fn solution(pairs: &Vec<(Vec<Element>, Vec<Element>)>) -> usize {
     }
     already_in_order.into_iter().sum()
 }
+
+fn marker1() -> Vec<Element> {
+    vec![Element::List(vec![Element::Number(2)])]
+}
+
+fn marker2() -> Vec<Element> {
+    vec![Element::List(vec![Element::Number(6)])]
+}
+
+fn distress_signal(input_packets: &Vec<Vec<Element>>) -> usize {
+    let mut packets = input_packets.clone();
+
+    packets.push(marker1());
+    packets.push(marker2());
+
+    packets.sort_by(|i, j| match in_order(i, j) {
+        Decision::True => std::cmp::Ordering::Less,
+        Decision::False => std::cmp::Ordering::Greater,
+        Decision::None => std::cmp::Ordering::Equal
+    });
+
+    let mut first_marker_index = 0;
+    let mut second_marker_index = 0;
+
+    for (packet, i) in packets.iter().zip(1..) {
+        print!("{}: {:?}", i, packet);
+
+        if *packet == marker1() {
+            first_marker_index = i;
+            print!(" (first marker)");
+        }
+
+        if *packet == marker2() {
+            second_marker_index = i;
+            print!(" (second marker)");
+        }
+        println!()
+    }
+
+    first_marker_index * second_marker_index
+}
+
 fn main() {
     let input = fs::read_to_string("./input").unwrap();
-    let (_, pairs) = parse_pairs(input.as_str()).unwrap();
+    let (_, packets) = parse_packets(input.as_str()).unwrap();
 
-    println!("Parsed {} pairs", pairs.len());
+    println!("Parsed {} packets,", packets.len());
 
-    let answer: usize = solution(&pairs);
+    let answer: usize = distress_signal(&packets);
     println!("The answer is {}", answer);
 }
 
@@ -125,7 +175,7 @@ fn main() {
 mod tests {
     use std::fs;
 
-    use crate::{in_order, parse_element, parse_pairs, Element, solution, Decision};
+    use crate::{in_order, parse_element, parse_pairs, solution, Decision, Element, parse_packets, distress_signal};
 
     #[test]
     fn test_example() {
@@ -134,6 +184,13 @@ mod tests {
         let result = solution(&parsed);
 
         assert_eq!(result, 13);
+    }
+
+    #[test]
+    fn test_distress_example() {
+        let input = fs::read_to_string("./input_example").unwrap();
+        let (_, parsed) = parse_packets(input.as_str()).unwrap();
+        assert_eq!(distress_signal(&parsed), 140);
     }
 
     #[test]
