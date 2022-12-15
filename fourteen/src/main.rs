@@ -111,12 +111,15 @@ fn parse_paths(input: &str) -> IResult<&str, Vec<Path>> {
     separated_list0(newline, parse_path)(input)
 }
 
-fn next_sand_position(current_sand_position: Point, map: &HashMap<Point, Entity>) -> Option<Point> {
+fn next_sand_position(current_sand_position: Point, map: &HashMap<Point, Entity>, floor: usize) -> Option<Point> {
     let below = Point { x: current_sand_position.x, y: current_sand_position.y + 1 };
     let left = Point { x: current_sand_position.x - 1, y: current_sand_position.y + 1  };
     let right = Point { x: current_sand_position.x + 1, y: current_sand_position.y + 1  };
 
-    if map.get(&below).is_none() {
+    if below.y == floor {
+        None
+    }
+    else if map.get(&below).is_none() {
         Some(below)
     }
     else if map.get(&left).is_none() {
@@ -136,8 +139,11 @@ fn sand_units_before_abyss(input_map: &HashMap<Point, Entity>) -> usize {
     let mut current_sand: Point = sand_start;
     let mut sand_counter  = 0;
 
-    while current_sand.y < abyss_after + 1  {
-        let next_sand_opt = next_sand_position(current_sand, &map);
+    let floor = abyss_after + 2;
+    let mut blocked = false;
+
+    while !blocked  {
+        let next_sand_opt = next_sand_position(current_sand, &map, floor);
 
         match next_sand_opt {
             Some(next_sand) => {
@@ -147,7 +153,12 @@ fn sand_units_before_abyss(input_map: &HashMap<Point, Entity>) -> usize {
             },
             None => {
                 sand_counter += 1;
-                current_sand = sand_start;
+                if current_sand == sand_start {
+                    blocked = true;
+                }
+                else {
+                    current_sand = sand_start;
+                }
             }
         }
     }
@@ -287,7 +298,7 @@ mod test_super {
         let current_sand_position = Point { x: 10, y: 1};
         let map: HashMap<Point, Entity> = HashMap::new();
         let expected_sand_position = Some(Point { x: 10, y: 2});
-        assert_eq!(next_sand_position(current_sand_position, &map), expected_sand_position);
+        assert_eq!(next_sand_position(current_sand_position, &map, 4), expected_sand_position);
     }
 
     #[test]
@@ -296,7 +307,7 @@ mod test_super {
         let below = Point { x: 10, y: 2};
         let map: HashMap<Point, Entity> = HashMap::from([(below, Entity::Rock)]);
         let expected_sand_position = Some(Point { x: 9, y: 2});
-        assert_eq!(next_sand_position(current_sand_position, &map), expected_sand_position);
+        assert_eq!(next_sand_position(current_sand_position, &map, 4), expected_sand_position);
     }
 
     #[test]
@@ -306,14 +317,14 @@ mod test_super {
         let left = Point { x: 9, y: 2 };
         let map: HashMap<Point, Entity> = HashMap::from([(below, Entity::Rock), (left, Entity::Sand)]);
         let expected_sand_position = Some(Point { x: 11, y: 2});
-        assert_eq!(next_sand_position(current_sand_position, &map), expected_sand_position);
+        assert_eq!(next_sand_position(current_sand_position, &map, 4), expected_sand_position);
     }
 
     #[test]
-    fn test_example() {
+    fn test_example_2() {
         let input = "498,4 -> 498,6 -> 496,6\n503,4 -> 502,4 -> 502,9 -> 494,9";
         let paths = parse_paths(input).unwrap();
         let map = build_map(&paths.1);
-        assert_eq!(sand_units_before_abyss(&map), 24);
+        assert_eq!(sand_units_before_abyss(&map), 93);
     }
 }
